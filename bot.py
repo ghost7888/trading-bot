@@ -9,7 +9,9 @@ API_KEY = os.getenv("API_KEY")
 API_SECRET = os.getenv("API_SECRET")
 
 # Connect to Binance TESTNET
-client = Client(API_KEY, API_SECRET, testnet=True)
+client = Client(API_KEY, API_SECRET)
+
+client.FUTURES_URL = 'https://testnet.binancefuture.com/fapi'
 
 @app.route('/webhook', methods=['POST'])
 def webhook():
