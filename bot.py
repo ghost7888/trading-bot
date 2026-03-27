@@ -3,8 +3,6 @@ import os
 
 app = Flask(__name__)
 
-# ✅ NO BINANCE AT START (IMPORTANT)
-
 @app.route('/')
 def home():
     return "Bot is running!"
@@ -13,9 +11,8 @@ def home():
 def webhook():
     data = request.json
     print("Received:", data)
-
-    # JUST PRINT FOR NOW (TESTING)
     return {"status": "received"}
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8080)
+    port = int(os.environ.get("PORT", 8080))
+    app.run(host="0.0.0.0", port=port)
