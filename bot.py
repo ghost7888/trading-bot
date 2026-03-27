@@ -1,63 +1,43 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request
 from binance.client import Client
 import os
 
 app = Flask(__name__)
 
-# Get API keys from Railway
+# GET API KEYS FROM RAILWAY
 API_KEY = os.getenv("API_KEY")
 API_SECRET = os.getenv("API_SECRET")
 
+# USE TESTNET (IMPORTANT)
+client = Client(API_KEY, API_SECRET)
+client.API_URL = 'https://testnet.binance.vision/api'
 
+@app.route('/')
+def home():
+    return "Bot is running!"
+
+# ✅ THIS IS THE IMPORTANT PART (WEBHOOK ROUTE)
 @app.route('/webhook', methods=['POST'])
 def webhook():
-    try:
-        data = request.json
-        print("Received:", data)
+    data = request.json
+    print("Received:", data)
 
-        symbol = data['symbol']
-        side = data['side'].upper()
-        qty = float(data['qty'])
-        tp = float(data['tp'])
-        sl = float(data['sl'])
+    symbol = data.get("symbol")
+    side = data.get("side").upper()
+    qty = float(data.get("qty"))
 
-        # ✅ CONNECT TO BINANCE ONLY HERE (NOT AT START)
-        client = Client(API_KEY, API_SECRET)
-        client.FUTURES_URL = 'https://testnet.binancefuture.com/fapi'
-
-        # MARKET ORDER
-        client.futures_create_order(
+    if side == "BUY":
+        order = client.order_market_buy(
             symbol=symbol,
-            side=side,
-            type='MARKET',
+            quantity=qty
+        )
+    elif side == "SELL":
+        order = client.order_market_sell(
+            symbol=symbol,
             quantity=qty
         )
 
-        # TAKE PROFIT
-        client.futures_create_order(
-            symbol=symbol,
-            side='SELL' if side == 'BUY' else 'BUY',
-            type='TAKE_PROFIT_MARKET',
-            stopPrice=tp,
-            closePosition=True
-        )
+    return {"status": "success"}
 
-        # STOP LOSS
-        client.futures_create_order(
-            symbol=symbol,
-            side='SELL' if side == 'BUY' else 'BUY',
-            type='STOP_MARKET',
-            stopPrice=sl,
-            closePosition=True
-        )
-
-        return jsonify({"status": "success"})
-
-    except Exception as e:
-        print("ERROR:", str(e))
-        return jsonify({"status": "error", "message": str(e)})
-
-
-# REQUIRED FOR RAILWAY
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080)
