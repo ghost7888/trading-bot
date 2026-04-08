@@ -25,19 +25,24 @@ def webhook():
         symbol = data["symbol"]
         side = data["side"]
         qty = float(data["qty"])
+        tp = float(data["tp"])
+        sl = float(data["sl"])
 
         order_side = "Buy" if side == "buy" else "Sell"
 
+        # ✅ OPEN TRADE WITH TP & SL
         response = session.place_order(
             category="linear",
             symbol=symbol,
             side=order_side,
             orderType="Market",
             qty=qty,
+            takeProfit=tp,
+            stopLoss=sl,
             timeInForce="GoodTillCancel"
         )
 
-        print("ORDER:", response)
+        print("ORDER WITH TP/SL:", response)
 
         return jsonify({"status": "success"})
 
